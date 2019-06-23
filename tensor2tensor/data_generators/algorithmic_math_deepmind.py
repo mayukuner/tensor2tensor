@@ -24,6 +24,7 @@ from __future__ import print_function
 
 import os
 import tarfile
+import random
 
 from tensor2tensor.data_generators import generator_utils
 from tensor2tensor.data_generators import problem
@@ -82,7 +83,10 @@ class AlgorithmicMathDeepmindAll(text_problems.Text2TextProblem):
 
     # Create the list of directories with data files.
     train_dirs = ["v1.0/train-easy", "v1.0/train-medium", "v1.0/train-hard"]
-    eval_dirs = ["v1.0/interpolate", "v1.0/extrapolate"]
+    eval_dirs = [
+      "v1.0/interpolate",
+      #"v1.0/extrapolate"
+    ]
     dirs = eval_dirs
     if dataset_split == problem.DatasetSplit.TRAIN:
       dirs = train_dirs
@@ -95,10 +99,12 @@ class AlgorithmicMathDeepmindAll(text_problems.Text2TextProblem):
         # In each text file, the first line is the input, the next the answer,
         # and so on until the end of the file.
         cur_input = None
-        with tf.gfile.Open(fname, "rb") as f:
+        with tf.gfile.Open(fname, "r") as f:
           for line in f:
             if cur_input is None:
               cur_input = line.strip()
             else:
-              yield {"inputs": cur_input, "targets": line.strip()}
+              prob_m = len(files)
+              if random.randint(0, prob_m-1) == 0:
+                yield {"inputs": cur_input, "targets": line.strip()}
               cur_input = None
