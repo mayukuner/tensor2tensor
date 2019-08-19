@@ -29,6 +29,7 @@ from tensor2tensor.data_generators import generator_utils
 from tensor2tensor.data_generators import problem
 from tensor2tensor.data_generators import text_problems
 from tensor2tensor.utils import registry
+from tqdm import tqdm
 
 import tensorflow as tf
 
@@ -48,7 +49,7 @@ class AlgorithmicMathDeepmindAll(text_problems.Text2TextProblem):
   def dataset_splits(self):
     return [{
         "split": problem.DatasetSplit.TRAIN,
-        "shards": 128,
+        "shards": 1,
     }, {
         "split": problem.DatasetSplit.EVAL,
         "shards": 1,
@@ -76,13 +77,16 @@ class AlgorithmicMathDeepmindAll(text_problems.Text2TextProblem):
       tf.gfile.MakeDirs(data_dir)
 
     # Download and extract the data.
-    filename = os.path.basename(_URL)
-    path = generator_utils.maybe_download(tmp_dir, filename, _URL)
+    # filename = os.path.basename(_URL)
+    # path = generator_utils.maybe_download(tmp_dir, filename, _URL)
+    path = "/mnt/lustre/mayukun/prj/calc_nlp/mathematics_dataset-v1.0.tar.gz"
     tarfile.open(path, "r:gz").extractall(tmp_dir)
 
     # Create the list of directories with data files.
     train_dirs = ["v1.0/train-easy", "v1.0/train-medium", "v1.0/train-hard"]
-    eval_dirs = ["v1.0/interpolate", "v1.0/extrapolate"]
+    eval_dirs = ["v1.0/interpolate",
+                 #"v1.0/extrapolate"
+    ]
     dirs = eval_dirs
     if dataset_split == problem.DatasetSplit.TRAIN:
       dirs = train_dirs
@@ -91,11 +95,11 @@ class AlgorithmicMathDeepmindAll(text_problems.Text2TextProblem):
     # Iterate over directories and files generating examples.
     for d in dirs:
       files = tf.gfile.Glob(d + "/*.txt")
-      for fname in files:
+      for fname in tqdm(files):
         # In each text file, the first line is the input, the next the answer,
         # and so on until the end of the file.
         cur_input = None
-        with tf.gfile.Open(fname, "rb") as f:
+        with tf.gfile.Open(fname, "r") as f:
           for line in f:
             if cur_input is None:
               cur_input = line.strip()
